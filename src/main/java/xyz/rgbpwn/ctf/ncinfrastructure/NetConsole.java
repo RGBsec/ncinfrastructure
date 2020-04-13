@@ -58,7 +58,7 @@ public class NetConsole implements Flushable {
 				try {
 					Socket socket = serverSocket.accept();
 					sockets.add(socket);
-					new Thread(new SocketThread(socket, new ProcessExecutor("bash -c /usr/app/" + command))).start();
+					new Thread(new SocketThread(socket, new ProcessExecutor("bash", "-c" ,"/usr/app/",  command))).start();
 					;
 				} catch (IOException e) {
 					e.printStackTrace();

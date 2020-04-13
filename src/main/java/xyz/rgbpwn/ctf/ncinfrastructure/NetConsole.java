@@ -95,9 +95,8 @@ public class NetConsole implements Flushable {
 				executor.redirectOutput(socket.getOutputStream());
 				
 				process = executor.start();
-
-				for (;;)
-					;
+				
+				while(!process.getFuture().isDone());
 
 			} catch (IOException e) {
 				e.printStackTrace();

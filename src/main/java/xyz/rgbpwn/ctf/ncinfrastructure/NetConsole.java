@@ -6,7 +6,6 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 
-import org.apache.commons.io.IOUtils;
 import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.StartedProcess;
 
@@ -97,8 +96,8 @@ public class NetConsole implements Flushable {
 
 				process = executor.start();
 
-				for (;;) {// System.out.println(process.getProcess().isAlive());
-				}
+				for (;;)
+					;
 
 			} catch (IOException e) {
 				e.printStackTrace();
@@ -128,7 +127,5 @@ public class NetConsole implements Flushable {
 		});
 
 	}
-
-	
 
 }

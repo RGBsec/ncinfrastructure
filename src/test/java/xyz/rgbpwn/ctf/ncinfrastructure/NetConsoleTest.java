@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Test;
 class NetConsoleTest {
 
 	@Test
-	void testNetConsole() {
+	void testNetConsole() throws InterruptedException {
 		NetConsole console;
 		try {
 			if (System.getProperty("os.name").toLowerCase().indexOf("win") >= 0) {

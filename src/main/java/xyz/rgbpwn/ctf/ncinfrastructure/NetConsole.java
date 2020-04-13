@@ -1,17 +1,14 @@
 package xyz.rgbpwn.ctf.ncinfrastructure;
 
-import java.io.BufferedReader;
 import java.io.Flushable;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 
 import org.apache.commons.io.IOUtils;
+import org.zeroturnaround.exec.ProcessExecutor;
+import org.zeroturnaround.exec.StartedProcess;
 
 /**
  * A class which is similar to {@link java.io.Console} that operates over a
@@ -44,14 +41,6 @@ public class NetConsole implements Flushable {
 		new Thread(new ListenerThread()).start();
 	}
 
-	private static void copyData(InputStream in, OutputStream out) throws IOException {
-		byte[] buffer = new byte[8 * 1024];
-		int len;
-		while ((len = in.read(buffer)) > 0) {
-			out.write(buffer, 0, len);
-		}
-	}
-
 	/**
 	 * <p>
 	 * This is a separate process used to monitor for incoming connections. It will
@@ -66,12 +55,15 @@ public class NetConsole implements Flushable {
 	protected class ListenerThread implements Runnable {
 
 		public void run() {
-			try {
-				Socket socket = serverSocket.accept();
-				sockets.add(socket);
-				new SocketThread(socket, Runtime.getRuntime().exec(command));
-			} catch (IOException e) {
-				e.printStackTrace();
+			for (;;) {
+				try {
+					Socket socket = serverSocket.accept();
+					sockets.add(socket);
+					new Thread(new SocketThread(socket, new ProcessExecutor(command))).start();
+					;
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
 			}
 		}
 	};
@@ -88,28 +80,24 @@ public class NetConsole implements Flushable {
 	 */
 	protected class SocketThread implements Runnable {
 		Socket socket;
-		Process process;
+		ProcessExecutor executor;
+		StartedProcess process;
 
-		public SocketThread(Socket socket, Process process) {
+		public SocketThread(Socket socket, ProcessExecutor executor) {
 			this.socket = socket;
-			this.process = process;
+			this.executor = executor;
 
 		}
 
 		public void run() {
 			try {
-				InputStream socketInputStream = socket.getInputStream();
-				OutputStream socketOutputStream = socket.getOutputStream();
+				executor.redirectError(socket.getOutputStream());
+				executor.redirectInput(socket.getInputStream());
+				executor.redirectOutput(socket.getOutputStream());
 
-				InputStream processInputStream = process.getInputStream();
-				InputStream processErrorStream = process.getErrorStream();
-				OutputStream processOutputStream = process.getOutputStream();
+				process = executor.start();
 
-				for (;;) {
-					copyData(processInputStream, socketOutputStream);
-					copyData(processErrorStream, socketOutputStream);
-
-					copyData(socketInputStream, processOutputStream);
+				for (;;) {// System.out.println(process.getProcess().isAlive());
 				}
 
 			} catch (IOException e) {
@@ -120,7 +108,7 @@ public class NetConsole implements Flushable {
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
-				process.destroyForcibly();
+
 			}
 
 		}
@@ -141,14 +129,6 @@ public class NetConsole implements Flushable {
 
 	}
 
-	public static void main(String[] argv) throws IOException {
-		NetConsole console = new NetConsole(12345, "cmd.exe");
-		Socket socket = new Socket("127.0.0.1", 12345);
-		PrintWriter write = new PrintWriter(socket.getOutputStream());
-		write.println("dir");
-		console.flush();
-		final BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-		System.out.println(reader.readLine());
-	}
+	
 
 }

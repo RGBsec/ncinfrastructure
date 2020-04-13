@@ -93,7 +93,7 @@ public class NetConsole implements Flushable {
 				executor.redirectError(socket.getOutputStream());
 				executor.redirectInput(socket.getInputStream());
 				executor.redirectOutput(socket.getOutputStream());
-
+				
 				process = executor.start();
 
 				for (;;)

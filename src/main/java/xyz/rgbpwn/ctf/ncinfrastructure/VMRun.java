@@ -11,9 +11,7 @@ public class VMRun {
 
 	public static void main(String[] argv) throws IOException {
 
-		Stream.of(new File(".").listFiles()).forEach(n -> {
-			System.out.println(n.getName());
-		});
+		
 		;
 		if (!new File(argv[0]).exists()) {
 			System.err.printf("File not found: %s", argv[0]);
@@ -28,7 +26,7 @@ public class VMRun {
 			System.exit(1);
 		}
 
-		new NetConsole(port, "/usr/app/" + argv[0]);
+		new NetConsole(port, argv[0]);
 
 	}
 

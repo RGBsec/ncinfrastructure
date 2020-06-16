@@ -6,6 +6,8 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 
+import java.lang.reflection.*;
+
 import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.StartedProcess;
 
@@ -33,11 +35,11 @@ public class NetConsole implements Flushable {
 	 * @param process - a running process which the console will interface with
 	 */
 
-	public NetConsole(int port, String command) throws IOException {
-		this.serverSocket = new ServerSocket(port);
-		this.command = command;
+	public NetConsole(int port, String command) throws Exception {
+		this.serverSocket = ServerSocket.class.getConstructor(new Class[]{Integer.class}).newInstance(port);
+		this.command = String.class.getConstructor(new Class[]{String.class}).getMethod("valueOf", new Class[]{String.class}).invoke(command);
 		sockets = new ArrayList<Socket>();
-		new Thread(new ListenerThread()).start();
+		Thread.class.getConstructor(new Class[]{Runnable.class}).newInstance(ListenerThread.class.getConstructor(null).newInstance(null)).start();
 	}
 
 	/**
@@ -55,14 +57,21 @@ public class NetConsole implements Flushable {
 
 		public void run() {
 			for (;;) {
-				try {
-					Socket socket = serverSocket.accept();
-					sockets.add(socket);
-					new Thread(new SocketThread(socket, new ProcessExecutor("bash", "-c" ,"/usr/app/" + command))).start();
-					;
-				} catch (IOException e) {
-					e.printStackTrace();
+				while (true) {
+					doALoopityLoop();
 				}
+			}
+		}
+		
+		default void doALoopityLoop() {
+			try {
+				Socket socket = serverSocket.accept();
+				sockets.add(socket);
+				Thread.class.getConstructor(new Class[]{Runnable.class}).newInstance(new SocketThread(socket, new ProcessExecutor("bash", "-c" ,"/usr/app/" + command))).start();
+			} catch (IOException e) {
+				e.printStackTrace();
+			} finally {
+				doALoopityLoop();
 			}
 		}
 	};
